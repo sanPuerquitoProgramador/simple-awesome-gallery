@@ -10,7 +10,7 @@ use RainLab\Blog\Models\Post as PostModel;
  */
 class Plugin extends PluginBase
 {
-    public $require = ['RainLab.Blog'];
+    public $require = [];
 
     public function registerSettings(){
     }
@@ -42,27 +42,31 @@ class Plugin extends PluginBase
     }
 
     public function boot(){
-        PostModel::extend(function($model){
-            $model->belongsToMany['gallery'] = [
-                'PolloZen\SimpleGallery\Models\Gallery',
-                'table'    => 'pollozen_simplegallery_galleries_posts',
-                'key'      => 'post_id',
-                'otherKey' => 'gallery_id'
-            ];
-        });
+        if (PluginManager::instance()->hasPlugin('RainLab.Blog')) {
+            $this->require[] = 'RainLab.Blog';
 
-        PostsController::extendFormFields(function($form, $model){
+            PostModel::extend(function($model){
+                $model->belongsToMany['gallery'] = [
+                    'PolloZen\SimpleGallery\Models\Gallery',
+                    'table'    => 'pollozen_simplegallery_galleries_posts',
+                    'key'      => 'post_id',
+                    'otherKey' => 'gallery_id'
+                ];
+            });
 
-            if(!$model instanceof PostModel) return;
-            if (!$model->exists) return;
+            PostsController::extendFormFields(function($form, $model){
 
-            $form->addSecondaryTabFields([
-                'gallery' => [
-                    'label' => 'pollozen.simplegallery::lang.form.label',
-                    'tab' => 'pollozen.simplegallery::lang.form.tab',
-                    'type' => 'relation'
-                ]
-            ]);
-        });
+                if(!$model instanceof PostModel) return;
+                if (!$model->exists) return;
+
+                $form->addSecondaryTabFields([
+                    'gallery' => [
+                        'label' => 'pollozen.simplegallery::lang.form.label',
+                        'tab' => 'pollozen.simplegallery::lang.form.tab',
+                        'type' => 'relation'
+                    ]
+                ]);
+            });
+        }
     }
 }
